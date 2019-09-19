@@ -158,6 +158,7 @@ namespace ElementLive.Src
 
             // rule
             rule.DoUndo();
+            config.SyncRule();
         }
 
         void UpdateLive()
