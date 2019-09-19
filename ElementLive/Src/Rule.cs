@@ -7,6 +7,8 @@ namespace ElementLive.Src
     /// </summary>
     sealed class Rule
     {
+        const int RULE_ARRAY_LEN = 9;
+
         /// <summary> Размер клетки в пикселях. </summary>
         public int PixelSize { get; private set; }
 
@@ -26,6 +28,8 @@ namespace ElementLive.Src
         /// <summary> Правило рождения клетки (born). </summary>
         public bool[] RuleToBorn;
 
+        bool[] ruleToStayLiveUndo, ruleToBornUndo;
+
         /// <summary> Время смерти клетки. Умирающая клетка не считает живой. </summary>
         public int DyingTimes;
 
@@ -43,14 +47,41 @@ namespace ElementLive.Src
         /// <summary>
         /// Правило GOL (S:23/B:3).
         /// </summary>
-        public void SetupGOL()
+        void SetupGOL()
         {
-            RuleToStayLive = new bool[9];
+            RuleToStayLive = new bool[RULE_ARRAY_LEN];
             RuleToStayLive[2] = true;
             RuleToStayLive[3] = true;
 
-            RuleToBorn = new bool[9];
+            RuleToBorn = new bool[RULE_ARRAY_LEN];
             RuleToBorn[3] = true;
+        }
+
+        public void CreateUndo()
+        {
+            if (ruleToStayLiveUndo == null)
+            {
+                ruleToStayLiveUndo = new bool[RULE_ARRAY_LEN];
+                ruleToBornUndo     = new bool[RULE_ARRAY_LEN];
+            }
+
+            for (int i = 0; i < RULE_ARRAY_LEN; i++)
+            {
+                ruleToBornUndo[i] = RuleToStayLive[i];
+                ruleToBornUndo[i] = RuleToBorn[i];
+            }
+        }
+
+        public void DoUndo()
+        {
+            if (ruleToStayLiveUndo != null)
+            {
+                for (int i = 0; i < RULE_ARRAY_LEN; i++)
+                {
+                    RuleToStayLive[i] = ruleToBornUndo[i];
+                    RuleToBorn[i] = ruleToBornUndo[i];
+                }
+            }
         }
 
     }

@@ -1,6 +1,7 @@
 ﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Input;
 using System.Diagnostics;
+using System.Collections.Generic;
 
 namespace ElementLive.Src
 {
@@ -12,7 +13,7 @@ namespace ElementLive.Src
     sealed class Scene : IScene
     {
         Rule rule;
-        Live[,] lives;
+        Live[,] lives, livesToUndo;
         bool pause;
         Counter updateCounter;
         Config config;
@@ -27,28 +28,28 @@ namespace ElementLive.Src
 
         public Scene()
         {
-            updateCounter = new Counter(4);
+            updateCounter = new Counter(4); // cap: 9
             pause = true;
-            rule = new Rule(pixelSize: 3);
-            lives = new Live[rule.MapHeight, rule.MapWidth];
+            rule = new Rule(pixelSize: 12);
+            lives = CreateLiveArray();
             config = new Config(this, rule);
             sw = new Stopwatch();
+        }
+
+        Live[,] CreateLiveArray()
+        {
+            var liveArray = new Live[rule.MapHeight, rule.MapWidth];
             // create
             for (int y = 0; y < rule.MapHeight; y++)
-            {
                 for (int x = 0; x < rule.MapWidth; x++)
-                {
-                    lives[y, x] = new Live(x, y, rule);
-                }
-            }
+                    liveArray[y, x] = new Live(x, y, rule);
+
             // post init
             for (int y = 0; y < rule.MapHeight; y++)
-            {
                 for (int x = 0; x < rule.MapWidth; x++)
-                {
-                    lives[y, x].PostInit(lives);
-                }
-            }
+                    liveArray[y, x].PostInit(liveArray);
+
+            return liveArray;
         }
 
         public void Update()
@@ -57,6 +58,15 @@ namespace ElementLive.Src
             {
                 showHelp = false;
             }
+
+            // create undo
+            if (EFInput.MouseWasPressed(MouseButtonEnum.LeftButton) || EFInput.MouseWasPressed(MouseButtonEnum.MiddleButton))
+            {
+                CreateUndo();
+            }
+
+            if (EFInput.KeyIsPressed(Keys.LeftControl) && EFInput.KeyWasPressed(Keys.Z))
+                DoUndo();
 
             Point mp = EFInput.GetMousePoint;
 
@@ -104,13 +114,46 @@ namespace ElementLive.Src
             {
                 // clear
                 for (int y = 0; y < rule.MapHeight; y++)
-                {
                     for (int x = 0; x < rule.MapWidth; x++)
-                    {
                         lives[y, x].Kill();
-                    }
+            }
+        }
+
+        // сохранить жизнь, что бы потом можно было отменить
+        void CreateUndo()
+        {
+            // live data
+            if (livesToUndo == null)
+                livesToUndo = CreateLiveArray();
+
+            for (int y = 0; y < rule.MapHeight; y++)
+            {
+                for (int x = 0; x < rule.MapWidth; x++)
+                {
+                    lives[y, x].CopyTo(livesToUndo[y, x]);
                 }
             }
+
+            // rule
+            rule.CreateUndo();
+        }
+
+        void DoUndo()
+        {
+            if (livesToUndo == null)
+                return;
+
+            // live data
+            for (int y = 0; y < rule.MapHeight; y++)
+            {
+                for (int x = 0; x < rule.MapWidth; x++)
+                {
+                    livesToUndo[y, x].CopyTo(lives[y, x]);
+                }
+            }
+
+            // rule
+            rule.DoUndo();
         }
 
         void UpdateLive()
@@ -118,20 +161,12 @@ namespace ElementLive.Src
             sw.Restart();
 
             for (int y = 0; y < rule.MapHeight; y++)
-            {
                 for (int x = 0; x < rule.MapWidth; x++)
-                {
                     lives[y, x].PreUpdate();
-                }
-            }
 
             for (int y = 0; y < rule.MapHeight; y++)
-            {
                 for (int x = 0; x < rule.MapWidth; x++)
-                {
                     lives[y, x].PostUpdate();
-                }
-            }
 
             sw.Stop();
         }
@@ -144,7 +179,6 @@ namespace ElementLive.Src
                 for (int x = 0; x < rule.MapWidth; x++)
                 {
                     var live = lives[y, x];
-
                     switch (live.Status)
                     {
                         case LiveStatusEnum.Alive:
@@ -160,14 +194,22 @@ namespace ElementLive.Src
 
             config.Draw(render);
 
-            render.DrawText(((int)(sw.ElapsedTicks * 0.01f)).ToString(),
-                new Vector2(UIHelper.ScreenWidth - 96f, UIHelper.ScreenHeight - 20f), Color.Gray);
+            int elapsedTime = (int)(sw.ElapsedTicks * 0.01f);
+            render.DrawText(
+                elapsedTime.ToString(),
+                new Vector2(UIHelper.ScreenWidth - 96f, UIHelper.ScreenHeight - 20f),
+                elapsedTime > 99 ? Color.Red : Color.Gray);
 
             if (showHelp)
             {
                 render.DrawText(
-                    "ЛКМ - точка\nСКМ - 5 точек\nS - шаг\nScape - пауза\nC - очистить\nПКМ - клик по упр. цифрам",
+                    "ЛКМ - точка\nСКМ - 5 точек\nS - шаг\nScape - пауза\nC - очистить\nПКМ - клик по упр. цифрам\nCtrl+Z - Undo",
                     new Vector2(96f), Color.White);
+            }
+
+            if (pause)
+            {
+                render.DrawText("||", new Vector2(1f, UIHelper.ScreenHeight - 48f), Color.White);
             }
 
         }

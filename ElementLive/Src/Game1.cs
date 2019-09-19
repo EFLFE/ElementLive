@@ -47,7 +47,9 @@ namespace ElementLive.Src
         protected override void Update(GameTime gameTime)
         {
             EFInput.Update();
-            scene.Update();
+
+            if (IsActive)
+                scene.Update();
 
             if (EFInput.KeyWasPressed(Keys.F4))
                 Exit();

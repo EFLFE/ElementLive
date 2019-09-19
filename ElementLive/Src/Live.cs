@@ -10,6 +10,9 @@ namespace ElementLive.Src
         Dead,
     }
 
+    /// <summary>
+    /// Клетка.
+    /// </summary>
     sealed class Live
     {
         int x;
@@ -84,6 +87,9 @@ namespace ElementLive.Src
             return y;
         }
 
+        /// <summary>
+        /// Обновление 1/2 - получение данных.
+        /// </summary>
         public void PreUpdate()
         {
             liveAround =
@@ -98,14 +104,8 @@ namespace ElementLive.Src
         }
 
         /// <summary>
-        /// Убить клетку.
+        /// Обновление 2/2 - дейстиве клетки.
         /// </summary>
-        public void Kill()
-        {
-            isAliveGetOne = 0;
-            Status = LiveStatusEnum.Dead;
-        }
-
         public void PostUpdate()
         {
             // ex GOL: 23/3
@@ -147,6 +147,26 @@ namespace ElementLive.Src
             Status = LiveStatusEnum.Alive;
             DyingTimes = rule.DyingTimes;
             isAliveGetOne = 1;
+        }
+
+        /// <summary>
+        /// Убить клетку.
+        /// </summary>
+        public void Kill()
+        {
+            isAliveGetOne = 0;
+            Status = LiveStatusEnum.Dead;
+        }
+
+        /// <summary>
+        /// Копировать данные.
+        /// </summary>
+        /// <param name="live">Этой клетке.</param>
+        public void CopyTo(Live live)
+        {
+            live.isAliveGetOne = isAliveGetOne;
+            live.Status = Status;
+            live.DyingTimes = DyingTimes;
         }
 
     }
