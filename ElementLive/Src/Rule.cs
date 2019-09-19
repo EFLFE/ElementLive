@@ -78,8 +78,8 @@ namespace ElementLive.Src
             {
                 for (int i = 0; i < RULE_ARRAY_LEN; i++)
                 {
-                    RuleToStayLive[i] = ruleToBornUndo[i];
-                    RuleToBorn[i] = ruleToBornUndo[i];
+                    RuleToStayLive[i] = RuleToStayLive[i];
+                    RuleToBorn[i]     = ruleToBornUndo[i];
                 }
             }
         }

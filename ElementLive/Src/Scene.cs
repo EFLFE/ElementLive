@@ -66,29 +66,33 @@ namespace ElementLive.Src
             }
 
             if (EFInput.KeyIsPressed(Keys.LeftControl) && EFInput.KeyWasPressed(Keys.Z))
-                DoUndo();
-
-            Point mp = EFInput.GetMousePoint;
-
-            if (rule.PixelSize > 1)
-                mp /= new Point(rule.PixelSize);
-
-            if (mp.X >= 0 && mp.Y >= 0 && mp.X < rule.MapWidth && mp.Y < rule.MapHeight)
             {
-                // paint
-                if (EFInput.MouseIsPressed(MouseButtonEnum.LeftButton))
+                DoUndo();
+            }
+            else
+            {
+                Point mp = EFInput.GetMousePoint;
+
+                if (rule.PixelSize > 1)
+                    mp /= new Point(rule.PixelSize);
+
+                if (mp.X >= 0 && mp.Y >= 0 && mp.X < rule.MapWidth && mp.Y < rule.MapHeight)
                 {
-                    lives[mp.Y, mp.X].Alive();
-                }
-                else if (EFInput.MouseIsPressed(MouseButtonEnum.MiddleButton))
-                {
-                    if (mp.X > 0 && mp.Y > 0 && mp.X < rule.MapWidth - 1 && mp.Y < rule.MapHeight - 1)
+                    // paint
+                    if (EFInput.MouseIsPressed(MouseButtonEnum.LeftButton))
                     {
-                        lives[mp.Y - 1, mp.X].Alive();
-                        lives[mp.Y, mp.X - 1].Alive();
                         lives[mp.Y, mp.X].Alive();
-                        lives[mp.Y + 1, mp.X].Alive();
-                        lives[mp.Y, mp.X + 1].Alive();
+                    }
+                    else if (EFInput.MouseIsPressed(MouseButtonEnum.MiddleButton))
+                    {
+                        if (mp.X > 0 && mp.Y > 0 && mp.X < rule.MapWidth - 1 && mp.Y < rule.MapHeight - 1)
+                        {
+                            lives[mp.Y - 1, mp.X].Alive();
+                            lives[mp.Y, mp.X - 1].Alive();
+                            lives[mp.Y, mp.X].Alive();
+                            lives[mp.Y + 1, mp.X].Alive();
+                            lives[mp.Y, mp.X + 1].Alive();
+                        }
                     }
                 }
             }
